@@ -4,6 +4,7 @@
 using namespace std;
 
 class bank_account {
+private:
     int account_number_;
     double balance_;
     double interest_rate_;
@@ -59,12 +60,11 @@ bool transfer(bank_account& from, bank_account& to, const double amount) {
         cout << "Transfer of $" << amount << " successful." << '\n';
         return true;
     }
-    
     cout << "Invalid transfer amount or insufficient funds." << '\n';
     return false;
 }
 
-void bank_account_interface(bank_account& account) {
+void bank_account_interface(bank_account& account, vector<bank_account>& accounts) {
     int choice;
     double amount;
 
@@ -101,16 +101,22 @@ void bank_account_interface(bank_account& account) {
             account.set_interest_rate(amount);
         break;
 
-        case 5: {
+    case 5: {
             int to_account_number;
             cout << "Enter account number to transfer to: ";
             cin >> to_account_number;
             cout << "Enter amount to transfer: $";
             cin >> amount;
-            bank_account to_account(to_account_number, 0.0);
-            transfer(account, to_account, amount);
+
+            const auto it = find_if(accounts.begin(), accounts.end(),
+                [&](const bank_account& acc) { return acc.get_account_number() == to_account_number; });
+            if (it != accounts.end()) {
+                transfer(account, *it, amount);
+            } else {
+                cout << "Recipient account not found." << '\n';
+            }
             break;
-        }
+    }
         
         case 0:
             cout << "Goodbye!" << '\n';
@@ -120,10 +126,11 @@ void bank_account_interface(bank_account& account) {
             cout << "Invalid choice." << '\n';
         break;
     }
-    bank_account_interface(account);
+    bank_account_interface(account, accounts);
 }
 
 void main() {
+
     cout << "Welcome to the bank!" << '\n';
 
     vector<bank_account> accounts;
@@ -165,7 +172,7 @@ void main() {
             
             if (choice >= 1 && static_cast<size_t>(choice) <= accounts.size()) {
                 cout << "For account " << choice << ":" << '\n';
-                bank_account_interface(accounts[choice - 1]);
+                bank_account_interface(accounts[choice - 1], accounts);
             }
             else {
                 cout << "Invalid account choice." << '\n';
